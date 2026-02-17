@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         IMAGE = "deepakm06/app:${BUILD_NUMBER}"
-        EC2_HOST = "ubuntu@43.205.138.33"
+        EC2_HOST = "43.205.138.33"
+        EC2_USER = "ubuntu"
     }
 
     stages {
@@ -36,16 +37,14 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(
                     credentialsId: 'ec2instance',
-                    keyFileVariable: 'SSH_KEY',
-                    usernameVariable: 'SSH_USER'
-        )]) {
+                    keyFileVariable: 'SSH_KEY'
+                )]) {
                     bat """
-                    ssh -o StrictHostKeyChecking=no %EC2_HOST% '
-                    docker pull %IMAGE% &&
-                    docker stop node-app || true &&
-                    docker rm node-app || true &&
-                    docker run -d --name node-app -p 80:3000 %IMAGE%
-                    '
+                        ssh -i %SSH_KEY% -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
+                        "docker pull %IMAGE% && ^
+                         docker stop node-app || true && ^
+                         docker rm node-app || true && ^
+                         docker run -d --name node-app -p 80:3000 %IMAGE%"
                     """
                 }
             }
