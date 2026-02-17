@@ -42,9 +42,9 @@ pipeline {
                     bat """
                         ssh -i %SSH_KEY% -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
                         "docker pull %IMAGE% && ^
-                         docker stop node-app || true && ^
-                         docker rm node-app || true && ^
-                         docker run -d --name node-app -p 80:3000 %IMAGE%"
+                         docker stop app || true && ^
+                         docker rm app || true && ^
+                         docker run -d --name app -p 80:3000 %IMAGE%"
                     """
                 }
             }
