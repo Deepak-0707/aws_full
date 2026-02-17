@@ -10,7 +10,7 @@ pipeline {
 
         stage('Build Image') {
             steps {
-                sh 'docker build -t %IMAGE% .'
+                bat 'docker build -t %IMAGE% .'
             }
         }
 
