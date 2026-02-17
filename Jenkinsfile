@@ -40,13 +40,9 @@ pipeline {
             usernameVariable: 'SSH_USER'
         )]) {
                     bat """
-                    ssh -o StrictHostKeyChecking=no %EC2_HOST% '
-                    docker pull %IMAGE% &&
-                    docker stop node-app || true &&
-                    docker rm node-app || true &&
-                    docker run -d --name node-app -p 80:3000 %IMAGE%
-                    '
-                    """
+ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@43.205.138.33 "docker pull deepakm06/app:2 && docker run -d --name app_container deepakm06/app:2"
+"""
+
                 }
             }
         }
