@@ -35,13 +35,16 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2instance']) {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ec2instance',
+                    keyFileVariable: 'SSH_KEY'
+                )]) {
 
                     bat """
-                        ssh -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
+                        ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
                         "docker pull %IMAGE% && ^
-                         docker stop node-app 2>nul || echo Container not running && ^
-                         docker rm node-app 2>nul || echo Container not present && ^
+                         docker stop node-app || exit 0 && ^
+                         docker rm node-app || exit 0 && ^
                          docker run -d --name node-app -p 80:3000 %IMAGE%"
                     """
                 }
