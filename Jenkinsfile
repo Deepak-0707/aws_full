@@ -39,15 +39,30 @@ pipeline {
                     credentialsId: 'ec2instance',
                     keyFileVariable: 'SSH_KEY'
                 )]) {
+
                     bat """
-                        ssh -i %SSH_KEY% -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
+                        REM Fix SSH key permissions
+                        icacls "%SSH_KEY%" /inheritance:r
+                        icacls "%SSH_KEY%" /grant:r "%USERNAME%:R"
+
+                        REM Deploy to EC2
+                        ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
                         "docker pull %IMAGE% && ^
-                         docker stop app || true && ^
-                         docker rm app || true && ^
+                         docker stop app 2>nul && ^
+                         docker rm app 2>nul && ^
                          docker run -d --name app -p 80:3000 %IMAGE%"
                     """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment Successful "
+        }
+        failure {
+            echo "Deployment Failed "
         }
     }
 }
