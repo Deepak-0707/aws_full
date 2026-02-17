@@ -31,19 +31,19 @@ pipeline {
                 bat 'docker push %IMAGE%'
             }
         }
-
         stage('Deploy to EC2') {
-            steps {
-                withCredentials([sshUserPrivateKey(
-            credentialsId: 'ec2instance',
-            keyFileVariable: 'SSH_KEY',
-            usernameVariable: 'SSH_USER'
-        )]) {
-                    bat """
-ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@43.205.138.33 "docker pull deepakm06/app:2 && docker run -d --name app_container deepakm06/app:2"
-"""
+    steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'ec2instance', keyFileVariable: 'SSH_KEY_FILE')]) {
+            bat """
+            icacls "%SSH_KEY_FILE%" /inheritance:r
+            icacls "%SSH_KEY_FILE%" /grant:r "%USERNAME%:R"
+            ssh -i "%SSH_KEY_FILE%" -o StrictHostKeyChecking=no ubuntu@43.205.138.33 "docker pull deepakm06/app:3 && docker stop app_container || exit 0 && docker rm app_container || exit 0 && docker run -d --name app_container -p 80:3000 deepakm06/app:3"
+            """
+        }
+    }
+}
 
-                }
+        
             }
         }
     }
