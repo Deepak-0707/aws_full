@@ -35,22 +35,14 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                withCredentials([sshUserPrivateKey(
-                    credentialsId: 'ec2instance',
-                    keyFileVariable: 'SSH_KEY'
-                )]) {
+                sshagent(['ec2instance']) {
 
                     bat """
-                        REM Fix SSH key permissions
-                        icacls "%SSH_KEY%" /inheritance:r
-                        icacls "%SSH_KEY%" /grant:r "%USERNAME%:R"
-
-                        REM Deploy to EC2
-                        ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
+                        ssh -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% ^
                         "docker pull %IMAGE% && ^
-                         docker stop app 2>nul && ^
-                         docker rm app 2>nul && ^
-                         docker run -d --name app -p 80:3000 %IMAGE%"
+                         docker stop node-app 2>nul || echo Container not running && ^
+                         docker rm node-app 2>nul || echo Container not present && ^
+                         docker run -d --name node-app -p 80:3000 %IMAGE%"
                     """
                 }
             }
@@ -59,10 +51,10 @@ pipeline {
 
     post {
         success {
-            echo "Deployment Successful "
+            echo "Deployment Successful"
         }
         failure {
-            echo "Deployment Failed "
+            echo "Deployment Failed"
         }
     }
 }
